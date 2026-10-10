@@ -7,20 +7,33 @@ from collections.abc import Mapping
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from agent_estimate.contract.schema import EstimateRequest, ForecastRecord, TokenForecast
+from agent_estimate.contract.schema import (
+    EstimateRequest,
+    ForecastRecord,
+    SubscriptionForecast,
+    TokenForecast,
+)
 
 if TYPE_CHECKING:
     from agent_estimate.render.report_models import EstimationReport
 
 
 def forecast_from_report(
-    request: EstimateRequest, report: EstimationReport, *, created_at_utc: datetime
+    request: EstimateRequest,
+    report: EstimationReport,
+    *,
+    created_at_utc: datetime,
+    tokens: TokenForecast | None = None,
+    subscription: SubscriptionForecast | None = None,
 ) -> ForecastRecord:
     """Build one typed forecast from a single-task report, without reading caps.
 
     Time is the planner's expected wall duration (friction and additive review
     included). File expectations are the caller's independent scope estimate;
-    absence stays unknown. This does not create ids or persist an artifact.
+    absence stays unknown. Tokens default to the request's prior or unavailable;
+    a caller passes a measured forecast explicitly. Subscription points stay
+    absent unless the caller passes the block derived from those tokens. This
+    does not create ids or persist an artifact.
     """
     if len(report.tasks) != 1:
         raise ValueError("a single-task request requires a single-task report")
@@ -38,7 +51,8 @@ def forecast_from_report(
         basis="expected-wall",
         source=report.source,
         as_of=report.as_of,
-        tokens=request.token_prior or TokenForecast(),
+        tokens=tokens if tokens is not None else (request.token_prior or TokenForecast()),
+        subscription=subscription,
     )
 
 

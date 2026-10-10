@@ -1,0 +1,31 @@
+# Run: agent-estimate estimate --spec <request> \
+#        --token-observations examples/token-observations.yaml \
+#        --meter-table examples/meter-table.yaml --format json
+#
+# Experimental. The shape of a caller's subscription meter table: one seat's
+# meters, one per model id, as the caller read them on the table's date. Every
+# number and model id below is synthetic and illustrates the shape only; the
+# package ships no meter numbers.
+#
+# <request> is an EstimateRequest whose execution_profile.model.id names a model
+# in this table. examples/estimate-request.yaml declares its model unknown, so
+# with it the report carries `basis: unavailable` and the reason.
+schema_version: agent-estimate/meter-table/v1
+source: synthetic meter readings (example only)
+as_of: 2026-09-28
+meters:
+  - model_id: example-frontier-model
+    # Points charged per million processed tokens that are not cache reads.
+    points_per_noncache_million: 2.0
+    # Points charged per million cache-read tokens.
+    points_per_cache_read_million: 0.2
+    # Size of the reset window, in points and days.
+    window_points: 100
+    window_days: 7
+    # Optional: one known reset instant; the window repeats from it.
+    reset_anchor: "2026-09-24T16:00:00Z"
+  - model_id: example-production-model
+    points_per_noncache_million: 0.5
+    points_per_cache_read_million: 0.05
+    window_points: 100
+    window_days: 7

@@ -34,7 +34,7 @@ MULTI_AGENT_TASKS = [
 HEADLINE_LINES = [
     "| Expected case | 75.4m |",
     "| Compression ratio | 6.28x |",
-    "Work estimate (60.4m) exceeds gpt_5_4 local reliability policy (unmeasured) (60m)",
+    "Work estimate (60.4m) exceeds gpt_6_sol local reliability policy (unmeasured) (60m)",
     "Work estimate (60.4m) exceeds gemini_3_1_pro local reliability policy (unmeasured) (45m)",
 ]
 

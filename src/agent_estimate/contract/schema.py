@@ -1,7 +1,8 @@
 """Typed artifact boundaries for the v0.8 forecast contract.
 
 These models validate data and replay declared cap arithmetic. Identity
-generation, persistence, and outcome ingestion belong to their later consumers.
+generation and outcome ingestion belong to their consumers; receipt persistence
+lives in the separate binding module.
 Identifiers here are caller-owned opaque strings; no identity is inferred.
 """
 
@@ -269,54 +270,115 @@ TOKEN_POPULATION_WARNING = (
 )
 
 
+MINIMUM_SEGMENT_N = 5
+TokenBasis = Literal["unavailable", "local-policy", "measured"]
+
+
+def _calendar_date(value: object) -> object:
+    """Accept a date or its exact YYYY-MM-DD spelling; epochs and datetimes are rejected."""
+    if value is None or type(value) is date:
+        return value
+    if isinstance(value, str) and len(value) == 10:
+        try:
+            parsed = date.fromisoformat(value)
+        except ValueError:
+            pass
+        else:
+            if parsed.isoformat() == value:
+                return parsed
+    raise ValueError("must be a calendar date in YYYY-MM-DD format")
+
+
+class ObservationWindow(ContractModel):
+    """Calendar bounds of the observed legs a measured count summarizes."""
+
+    start: date
+    end: date
+
+    @field_validator("start", "end", mode="before")
+    @classmethod
+    def require_calendar_date(cls, value: object) -> object:
+        return _calendar_date(value)
+
+    @model_validator(mode="after")
+    def require_ordered_bounds(self) -> ObservationWindow:
+        if self.end < self.start:
+            raise ValueError("observation window end cannot precede its start")
+        return self
+
+
+class TokenSegment(ContractModel):
+    """The task-type × execution-profile population behind a measured count."""
+
+    task_type: TaskKind
+    execution_profile_id: Identifier
+    n: Count
+
+
 class TokenForecast(ContractModel):
     """Independent token counts and their evidence; no implied rate or calibration.
 
-    Total means processed tokens including cache carry. Output is reported
-    separately and is included in total when both counts are supplied.
+    Total means processed tokens including cache carry. Output and cache-read
+    tokens are reported separately and are each included in total when supplied.
+    A measured forecast names its segment and observation window; it exists only
+    at the minimum sample size and is never inferred from duration or caps.
     """
 
     expected_tokens_total: Count | None = None
     expected_tokens_output: Count | None = None
-    basis: Literal["unavailable", "local-policy"] = "unavailable"
+    expected_tokens_cache_read: Count | None = None
+    basis: TokenBasis = "unavailable"
     source: NonEmptyStr | None = None
     as_of: date | None = None
     population: NonEmptyStr | None = None
     warnings: tuple[NonEmptyStr, ...] = ()
+    segment: TokenSegment | None = None
+    window: ObservationWindow | None = None
 
     @field_validator("as_of", mode="before")
     @classmethod
     def require_calendar_date(cls, value: object) -> object:
-        if value is None or type(value) is date:
-            return value
-        if isinstance(value, str) and len(value) == 10:
-            try:
-                parsed = date.fromisoformat(value)
-            except ValueError:
-                pass
-            else:
-                if parsed.isoformat() == value:
-                    return parsed
-        raise ValueError("token as_of must be a date in YYYY-MM-DD format")
+        try:
+            return _calendar_date(value)
+        except ValueError as exc:
+            raise ValueError(f"token as_of {exc}") from exc
 
     @model_validator(mode="after")
     def require_token_evidence(self) -> TokenForecast:
         total, output = self.expected_tokens_total, self.expected_tokens_output
+        cache_read = self.expected_tokens_cache_read
         if total is not None and output is not None and output > total:
             raise ValueError("expected token output cannot exceed total processed tokens")
+        if total is not None and cache_read is not None and cache_read > total:
+            raise ValueError("expected cache-read tokens cannot exceed total processed tokens")
         if self.basis == "unavailable":
-            if any(value is not None for value in (total, output, self.source, self.as_of,
-                                                   self.population)) or self.warnings:
+            if any(value is not None for value in (total, output, cache_read, self.source,
+                                                   self.as_of, self.population, self.segment,
+                                                   self.window)) or self.warnings:
                 raise ValueError("unavailable token forecasts require null counts and provenance")
-        else:
-            if total is None and output is None:
-                raise ValueError("local-policy token forecasts require at least one token count")
+            return self
+        if total is None and output is None:
+            raise ValueError(f"{self.basis} token forecasts require at least one token count")
+        if self.basis == "local-policy":
             if self.source is None or self.as_of is None or self.population is None:
                 raise ValueError("local-policy token forecasts require source, as_of and population")
+            if self.segment is not None or self.window is not None:
+                raise ValueError("local-policy token forecasts cannot carry a measured segment")
             # All local priors carry the warning, including deserialized records.
             # A caller cannot claim calibrated task evidence or suppress this label.
             if self.warnings != (TOKEN_POPULATION_WARNING,):
                 raise ValueError("local-policy token forecasts require the population mismatch warning")
+            return self
+        if self.source is None or self.as_of is None:
+            raise ValueError("measured token forecasts require source and as_of")
+        if self.segment is None or self.window is None:
+            raise ValueError("measured token forecasts require a segment and an observation window")
+        if self.segment.n < MINIMUM_SEGMENT_N:
+            raise ValueError(
+                f"measured token forecasts require at least {MINIMUM_SEGMENT_N} observed legs"
+            )
+        if self.as_of != self.window.end:
+            raise ValueError("measured token as_of must equal the observation window end")
         return self
 
 
@@ -328,6 +390,103 @@ class LocalTokenPrior(TokenForecast):
     as_of: date
     population: NonEmptyStr
     warnings: tuple[NonEmptyStr, ...] = (TOKEN_POPULATION_WARNING,)
+
+
+SUBSCRIPTION_METER_WARNING = (
+    "Experimental: subscription points apply a caller-supplied meter to the token forecast. "
+    "Meter coefficients are seat-specific local policy that moves on provider tier steps; "
+    "they are not calibrated."
+)
+
+SubscriptionBasis = Literal["unavailable", "local-policy"]
+Coefficient = Annotated[float, Field(strict=True, ge=0)]
+
+
+class Meter(ContractModel):
+    """One model's meter as the caller read it on its own seat; never packaged.
+
+    Cache-read tokens are charged at the cache-read coefficient and every other
+    processed token at the non-cache coefficient. The window fields describe the
+    meter's reset window and do not scale the points.
+    """
+
+    model_id: NonEmptyStr
+    points_per_noncache_million: Coefficient
+    points_per_cache_read_million: Coefficient
+    window_points: PositiveNumber
+    window_days: PositiveNumber
+    reset_anchor: UtcDatetime | None = None
+
+    def points(self, tokens_total: int, tokens_cache_read: int) -> float:
+        """Points of one token split; cache-read tokens are included in total."""
+        if tokens_cache_read > tokens_total:
+            raise ValueError("cache-read tokens cannot exceed total processed tokens")
+        try:
+            value = (
+                (tokens_total - tokens_cache_read) * self.points_per_noncache_million
+                + tokens_cache_read * self.points_per_cache_read_million
+            ) / 1_000_000
+        except OverflowError as exc:
+            raise ValueError("meter arithmetic overflowed") from exc
+        if not math.isfinite(value):
+            raise ValueError("meter arithmetic overflowed")
+        return value
+
+
+class SubscriptionForecast(ContractModel):
+    """Experimental subscription points for the assigned agent's model.
+
+    Points replay from the token forecast's total and cache-read counts and the
+    one meter named here. Without a token forecast, its cache-read count, a model
+    id or a meter for that id, the points stay null and the block says why; no
+    split, coefficient or model is ever assumed.
+    """
+
+    agent_name: NonEmptyStr
+    token_basis: TokenBasis
+    model_id: NonEmptyStr | None = None
+    expected_points: Coefficient | None = None
+    window_fraction: Coefficient | None = None
+    basis: SubscriptionBasis = "unavailable"
+    unavailable_reason: NonEmptyStr | None = None
+    source: NonEmptyStr | None = None
+    as_of: date | None = None
+    meter: Meter | None = None
+    warnings: tuple[NonEmptyStr, ...] = ()
+
+    @field_validator("as_of", mode="before")
+    @classmethod
+    def require_calendar_date(cls, value: object) -> object:
+        try:
+            return _calendar_date(value)
+        except ValueError as exc:
+            raise ValueError(f"subscription as_of {exc}") from exc
+
+    @model_validator(mode="after")
+    def require_subscription_evidence(self) -> SubscriptionForecast:
+        if self.basis == "unavailable":
+            if any(value is not None for value in (self.expected_points, self.window_fraction,
+                                                   self.meter)) or self.warnings:
+                raise ValueError("unavailable subscription forecasts require null points and meter")
+            if self.unavailable_reason is None:
+                raise ValueError("unavailable subscription forecasts require a reason")
+            return self
+        if self.unavailable_reason is not None:
+            raise ValueError("local-policy subscription forecasts cannot carry an unavailable reason")
+        if self.meter is None or self.expected_points is None or self.window_fraction is None:
+            raise ValueError("local-policy subscription forecasts require points and their meter")
+        if self.source is None or self.as_of is None:
+            raise ValueError("local-policy subscription forecasts require source and as_of")
+        if self.model_id != self.meter.model_id:
+            raise ValueError("subscription meter must be the meter of the forecast's model id")
+        if self.token_basis == "unavailable":
+            raise ValueError("subscription points require an available token forecast")
+        if self.window_fraction != self.expected_points / self.meter.window_points:
+            raise ValueError("window fraction must equal expected points over window points")
+        # The label is mandatory, as on local-policy token priors; token warnings follow it.
+        if self.warnings[:1] != (SUBSCRIPTION_METER_WARNING,):
+            raise ValueError("local-policy subscription forecasts require the experimental warning")
+        return self
 
 
 class EstimateRequest(ContractModel):
@@ -370,6 +529,14 @@ class ForecastRecord(ContractModel):
     source: NonEmptyStr | None = None
     as_of: date | None = None
     tokens: TokenForecast = Field(default_factory=TokenForecast)
+    subscription: SubscriptionForecast | None = None
+
+    @property
+    def forecast_key(self) -> str:
+        """Versioned fingerprint of validated request and engine, outside wire output."""
+        from agent_estimate.contract.binding import forecast_key
+
+        return forecast_key(self)
 
     @model_validator(mode="after")
     def require_expected_bases(self) -> ForecastRecord:
@@ -382,7 +549,23 @@ class ForecastRecord(ContractModel):
         ):
             if calculation is not None and calculation.base_value != expected:
                 raise ValueError("cap calculation base must match the independent expected value")
+        if self.subscription is not None:
+            self._require_subscription_replay(self.subscription)
         return self
+
+    def _require_subscription_replay(self, subscription: SubscriptionForecast) -> None:
+        profile = self.request.execution_profile
+        if (subscription.agent_name != profile.runtime.agent_name
+                or subscription.model_id != profile.model.id):
+            raise ValueError("subscription forecast must name the request's agent and model id")
+        if subscription.token_basis != self.tokens.basis:
+            raise ValueError("subscription token_basis must match the token forecast")
+        if subscription.meter is None:
+            return
+        total, cache_read = self.tokens.expected_tokens_total, self.tokens.expected_tokens_cache_read
+        if (total is None or cache_read is None
+                or subscription.meter.points(total, cache_read) != subscription.expected_points):
+            raise ValueError("subscription points must replay from the token forecast and its meter")
 
 
 class ObservedTokens(ContractModel):

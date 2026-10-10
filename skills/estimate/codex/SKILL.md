@@ -66,14 +66,14 @@ the research band instead of the flat brainstorm band.
 
 Current provenance-labeled local-policy keys include:
 
-- `opus_4_x`, `opus_4_7`, `opus_4_6`
-- `gpt_5_5`, `gpt_5_4`
+- `fable_5_1`, `opus_5_5`
+- `gpt_6_astra`, `gpt_6_sol`, `gpt_6_luna`
 - `gemini_3_1_pro`
-- `sonnet_4_6`
+- `sonnet_5_5`
 - `haiku_4_5`
 
-Legacy keys such as `opus`, `gpt_5`, `gpt_5_2`, `gpt_5_3`,
-`gemini_3_pro`, and `sonnet` remain accepted.
+Earlier keys such as `opus_4_x`, `opus_4_7`, `opus_4_6`, `opus`,
+`sonnet_4_6`, `gpt_5` through `gpt_5_5`, and `gemini_3_pro` remain accepted.
 
 Warnings compare friction-adjusted work only. The shipped values are local
 reliability policy (unmeasured), not published METR horizons. Duration priors

@@ -15,12 +15,22 @@ from agent_estimate.adapters.config_loader import load_config, load_default_conf
 from agent_estimate.adapters.github_adapter import GitHubAdapterError
 from agent_estimate.adapters.github_ghcli import GitHubGhCliAdapter
 from agent_estimate.adapters.github_rest import GitHubRestAdapter
-from agent_estimate.adapters.spec_loader import load_estimate_request
+from agent_estimate.adapters.spec_loader import (
+    load_estimate_request,
+    load_meter_table,
+    load_token_observations,
+)
 from agent_estimate.audit import emit_audit_event
 from agent_estimate.cli.commands._pipeline import run_estimate_pipeline
 from agent_estimate.cli.commands._utils import validate_output_format
 from agent_estimate.cli.commands.github import parse_issue_selection
-from agent_estimate.contract import EstimateRequest
+from agent_estimate.contract import (
+    EstimateRequest,
+    MeterTable,
+    TokenObservations,
+    measured_token_forecast,
+    subscription_forecast,
+)
 from agent_estimate.core import EstimationCategory, EstimationConfig, ReviewMode
 from agent_estimate.core.history import infer_warm_context
 from agent_estimate.render import render_json_report, render_markdown_report
@@ -36,6 +46,23 @@ def run(
     ),
     spec: Path | None = typer.Option(
         None, "--spec", help="Path to a versioned EstimateRequest YAML file."
+    ),
+    token_observations: Path | None = typer.Option(
+        None,
+        "--token-observations",
+        help=(
+            "Observed tokens per closed leg (agent-estimate/token-observations/v1 YAML); "
+            "corrects the token forecast for the spec's segment at n >= 5. Requires --spec."
+        ),
+    ),
+    meter_table: Path | None = typer.Option(
+        None,
+        "--meter-table",
+        help=(
+            "Experimental: caller-supplied subscription meters per model id "
+            "(agent-estimate/meter-table/v1 YAML); reports subscription points for the "
+            "spec's assigned agent from its token forecast. Requires --spec."
+        ),
     ),
     config: Path | None = typer.Option(
         None, "--config", "-c", help="Path to config YAML."
@@ -147,8 +174,14 @@ def run(
     if sources > 1:
         _error("Provide only one input source: task argument, --file, --issues, or --spec.", 2)
     validate_output_format(format)
+    if token_observations is not None and spec is None:
+        _error("--token-observations requires --spec.", 2)
+    if meter_table is not None and spec is None:
+        _error("--meter-table requires --spec.", 2)
 
     request: EstimateRequest | None = None
+    observations: TokenObservations | None = None
+    meters: MeterTable | None = None
     if spec is not None:
         # The file owns task/profile facts. Explicit defaults are overrides too.
         for option in (
@@ -165,6 +198,16 @@ def run(
             request = load_estimate_request(spec)
         except ValueError as exc:
             _error(f"Spec validation error: {exc}", 2)
+        if token_observations is not None:
+            try:
+                observations = load_token_observations(token_observations)
+            except ValueError as exc:
+                _error(f"Token observations validation error: {exc}", 2)
+        if meter_table is not None:
+            try:
+                meters = load_meter_table(meter_table)
+            except ValueError as exc:
+                _error(f"Meter table validation error: {exc}", 2)
 
     descriptions: list[str] = []
 
@@ -310,8 +353,22 @@ def run(
         _error(f"Runtime error: {exc}", 1)
 
     if request is not None:
+        # Observations always yield a labeled token block, measured or not; without
+        # them the caller's prior alone decides whether one appears.
+        tokens = (
+            measured_token_forecast(request, observations)
+            if observations is not None else request.token_prior
+        )
+        # A meter table always yields a labeled subscription block, points or not.
+        subscription = None
+        if meters is not None:
+            try:
+                subscription = subscription_forecast(request, tokens, meters)
+            except ValueError as exc:
+                _error(f"Subscription forecast error: {exc}", 2)
         report = replace(
-            report, schema_version="agent-estimate/report/v1", tokens=request.token_prior,
+            report, schema_version="agent-estimate/report/v1", tokens=tokens,
+            subscription=subscription,
         )
 
     emit_audit_event(

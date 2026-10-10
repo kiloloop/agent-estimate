@@ -30,11 +30,29 @@ def render_markdown_report(report: EstimationReport, *, compact: bool = False) -
             "", "## Token Forecast", "",
             f"- Expected total processed tokens (including cache carry): {total}",
             f"- Expected output tokens: {output}",
-            (f"- basis: `{tokens.basis}`; source: {_normalize_inline(tokens.source or 'unknown')}; "
-             f"as_of: {tokens.as_of.isoformat() if tokens.as_of else 'unknown'}; "
-             f"population: {_normalize_inline(tokens.population or 'unknown')}"),
-            *[f"- {_normalize_inline(warning)}" for warning in tokens.warnings],
         ])
+        # The cache-read slot appears once a measurement or prior supplies it;
+        # prior-only reports keep their v0.8 lines.
+        if tokens.expected_tokens_cache_read is not None or tokens.basis == "measured":
+            cache_read = (
+                "unavailable" if tokens.expected_tokens_cache_read is None
+                else f"{tokens.expected_tokens_cache_read:,}"
+            )
+            lines.append(f"- Expected cache-read tokens: {cache_read}")
+        lines.append(
+            f"- basis: `{tokens.basis}`; source: {_normalize_inline(tokens.source or 'unknown')}; "
+            f"as_of: {tokens.as_of.isoformat() if tokens.as_of else 'unknown'}; "
+            f"population: {_normalize_inline(tokens.population or 'unknown')}"
+        )
+        if tokens.segment is not None and tokens.window is not None:
+            lines.append(
+                f"- segment: {_normalize_inline(tokens.segment.task_type)} × "
+                f"{_normalize_inline(tokens.segment.execution_profile_id)}; n: {tokens.segment.n}; "
+                f"window: {tokens.window.start.isoformat()}..{tokens.window.end.isoformat()}"
+            )
+        lines.extend(f"- {_normalize_inline(warning)}" for warning in tokens.warnings)
+    if report.subscription is not None:
+        lines.extend(_render_subscription(report))
     if not compact:
         lines.extend([""])
         lines.extend(_render_wave_table(report))
@@ -54,6 +72,37 @@ def render_markdown_report(report: EstimationReport, *, compact: bool = False) -
     lines.extend(_render_reliability_warnings(report))
     lines.append("")
     return "\n".join(lines)
+
+
+def _render_subscription(report: EstimationReport) -> list[str]:
+    subscription = report.subscription
+    lines = [
+        "", "## Subscription Points Forecast (experimental)", "",
+        (f"- Agent: {_normalize_inline(subscription.agent_name)}; "
+         f"model: {_normalize_inline(subscription.model_id or 'unknown')}"),
+    ]
+    meter = subscription.meter
+    if meter is None:
+        lines.append(
+            f"- Expected points: unavailable ({_normalize_inline(subscription.unavailable_reason)})"
+        )
+    else:
+        lines.append(
+            f"- Expected points: {subscription.expected_points:.4g} of a "
+            f"{meter.window_points:g}-point, {meter.window_days:g}-day window "
+            f"({subscription.window_fraction * 100:.4g}% of the window)"
+        )
+        lines.append(
+            f"- meter: {meter.points_per_noncache_million:g} points per million non-cache tokens; "
+            f"{meter.points_per_cache_read_million:g} points per million cache-read tokens"
+        )
+    lines.append(
+        f"- basis: `{subscription.basis}`; source: {_normalize_inline(subscription.source or 'unknown')}; "
+        f"as_of: {subscription.as_of.isoformat() if subscription.as_of else 'unknown'}; "
+        f"token basis: `{subscription.token_basis}`"
+    )
+    lines.extend(f"- {_normalize_inline(warning)}" for warning in subscription.warnings)
+    return lines
 
 
 def _render_task_table(report: EstimationReport) -> list[str]:

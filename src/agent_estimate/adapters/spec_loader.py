@@ -1,4 +1,4 @@
-"""Load a YAML file through the versioned estimate-request boundary."""
+"""Load YAML files through the versioned contract boundaries."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from pathlib import Path
 import yaml
 from pydantic import ValidationError
 
-from agent_estimate.contract import EstimateRequest
+from agent_estimate.contract import EstimateRequest, MeterTable, TokenObservations
 
 
 class _UniqueKeyLoader(yaml.SafeLoader):
@@ -34,12 +34,26 @@ class _UniqueKeyLoader(yaml.SafeLoader):
 
 def load_estimate_request(path: Path) -> EstimateRequest:
     """Read one full contract document; validation errors name dotted fields."""
+    return _load_document(path, EstimateRequest)
+
+
+def load_token_observations(path: Path) -> TokenObservations:
+    """Read a token-observations document; validation errors name dotted fields."""
+    return _load_document(path, TokenObservations)
+
+
+def load_meter_table(path: Path) -> MeterTable:
+    """Read a meter-table document; validation errors name dotted fields."""
+    return _load_document(path, MeterTable)
+
+
+def _load_document(path: Path, model):
     try:
         raw = yaml.load(path.read_text(encoding="utf-8"), Loader=_UniqueKeyLoader)
     except (OSError, UnicodeError, yaml.YAMLError) as exc:
         raise ValueError(f"{path}: <root>: {exc}") from exc
     try:
-        return EstimateRequest.model_validate(raw)
+        return model.model_validate(raw)
     except ValidationError as exc:
         details = "\n".join(
             f"- {'.'.join(map(str, error['loc'])) or '<root>'}: {error['msg']}"

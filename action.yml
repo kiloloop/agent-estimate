@@ -77,7 +77,7 @@ inputs:
     required: false
     default: '3.12'
   version:
-    description: 'agent-estimate version to install (e.g. "0.8.0"). Omit to install from this Action ref.'
+    description: 'agent-estimate version to install (e.g. "0.9.0"). Omit to install from this Action ref.'
     required: false
   token:
     description: 'GitHub token for issue fetching and comment output. Use github.token or an App installation token for update-in-place comments; PAT-authored comments are never adopted, so repeated PAT runs create new comments when no matching bot comment exists.'

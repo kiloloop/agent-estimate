@@ -85,7 +85,7 @@ No tier corrections.
 
 ### Reliability Horizon Warnings
 
-- **Add known_debt.md as standard protocol memory file**: Work estimate (60.4m) exceeds gpt_5_4 local reliability policy (unmeasured) (60m). Consider splitting the task.
+- **Add known_debt.md as standard protocol memory file**: Work estimate (60.4m) exceeds gpt_6_sol local reliability policy (unmeasured) (60m). Consider splitting the task.
 - **Write quickstart guide with protocol comparison table**: Work estimate (60.4m) exceeds gemini_3_1_pro local reliability policy (unmeasured) (45m). Consider splitting the task.
 
 

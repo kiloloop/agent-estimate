@@ -55,10 +55,10 @@ def test_default_is_unavailable_and_cannot_emit_unlabeled_counts():
     default = TokenForecast()
     assert default.model_dump(mode="json") == {
         "expected_tokens_total": None, "expected_tokens_output": None,
-        "basis": "unavailable", "source": None, "as_of": None,
-        "population": None, "warnings": [],
+        "expected_tokens_cache_read": None, "basis": "unavailable", "source": None,
+        "as_of": None, "population": None, "warnings": [], "segment": None, "window": None,
     }
-    for field in ("expected_tokens_total", "expected_tokens_output"):
+    for field in ("expected_tokens_total", "expected_tokens_output", "expected_tokens_cache_read"):
         for count in (0, 100):
             with pytest.raises(ValidationError, match="unavailable"):
                 TokenForecast(**{field: count})

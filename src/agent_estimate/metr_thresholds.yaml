@@ -1,5 +1,62 @@
-registry_version: "v0.7.5-policy-1"
+registry_version: "v0.9-policy-1"
 models:
+  fable_5_1:
+    display_name: "Fable 5.1"
+    p80_minutes: 90
+    basis: local-policy
+    source: "agent-estimate default reliability policy"
+    source_version: "v0.9-policy-1"
+    as_of: "2026-09-28"
+  opus_5_5:
+    display_name: "Opus 5.5"
+    p80_minutes: 90
+    basis: local-policy
+    source: "agent-estimate default reliability policy"
+    source_version: "v0.9-policy-1"
+    as_of: "2026-09-28"
+  gpt_6_astra:
+    display_name: "GPT-6 Astra"
+    p80_minutes: 90
+    basis: local-policy
+    source: "agent-estimate default reliability policy"
+    source_version: "v0.9-policy-1"
+    as_of: "2026-09-28"
+  gpt_6_sol:
+    display_name: "GPT-6 Sol"
+    p80_minutes: 60
+    basis: local-policy
+    source: "agent-estimate default reliability policy"
+    source_version: "v0.9-policy-1"
+    as_of: "2026-09-28"
+  gemini_3_1_pro:
+    display_name: "Gemini 3.1 Pro"
+    p80_minutes: 45
+    basis: local-policy
+    source: "agent-estimate default reliability policy"
+    source_version: "v0.7.5-policy-1"
+    as_of: "2026-08-23"
+  sonnet_5_5:
+    display_name: "Sonnet 5.5"
+    p80_minutes: 30
+    basis: local-policy
+    source: "agent-estimate default reliability policy"
+    source_version: "v0.9-policy-1"
+    as_of: "2026-09-28"
+  gpt_6_luna:
+    display_name: "GPT-6 Luna"
+    p80_minutes: 15
+    basis: local-policy
+    source: "agent-estimate default reliability policy"
+    source_version: "v0.9-policy-1"
+    as_of: "2026-09-28"
+  haiku_4_5:
+    display_name: "Haiku 4.5"
+    p80_minutes: 15
+    basis: local-policy
+    source: "agent-estimate default reliability policy"
+    source_version: "v0.7.5-policy-1"
+    as_of: "2026-08-23"
+  # Earlier models — kept so existing configs keep resolving.
   opus_4_x:
     display_name: "Opus 4.x"
     p80_minutes: 90
@@ -35,13 +92,6 @@ models:
     source: "agent-estimate default reliability policy"
     source_version: "v0.7.5-policy-1"
     as_of: "2026-08-23"
-  gemini_3_1_pro:
-    display_name: "Gemini 3.1 Pro"
-    p80_minutes: 45
-    basis: local-policy
-    source: "agent-estimate default reliability policy"
-    source_version: "v0.7.5-policy-1"
-    as_of: "2026-08-23"
   sonnet_4_6:
     display_name: "Sonnet 4.6"
     p80_minutes: 30
@@ -49,14 +99,6 @@ models:
     source: "agent-estimate default reliability policy"
     source_version: "v0.7.5-policy-1"
     as_of: "2026-08-23"
-  haiku_4_5:
-    display_name: "Haiku 4.5"
-    p80_minutes: 15
-    basis: local-policy
-    source: "agent-estimate default reliability policy"
-    source_version: "v0.7.5-policy-1"
-    as_of: "2026-08-23"
-  # Legacy keys — kept for backward compatibility with existing configs.
   opus:
     display_name: "Opus"
     p80_minutes: 90

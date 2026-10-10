@@ -6,7 +6,7 @@ import dataclasses
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from agent_estimate.contract.schema import TokenForecast
+from agent_estimate.contract.schema import SubscriptionForecast, TokenForecast
 from agent_estimate.core.models import EstimationCategory, TaskEstimate
 from agent_estimate.version import __version__
 
@@ -144,6 +144,7 @@ class EstimationReport:
     source: str | None = None
     as_of: str | None = None
     tokens: TokenForecast | None = None
+    subscription: SubscriptionForecast | None = None
 
     @property
     def review_overhead_minutes(self) -> float:

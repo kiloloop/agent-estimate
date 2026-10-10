@@ -31,6 +31,8 @@ def _build_payload(report: EstimationReport) -> dict[str, Any]:
             "expected_minutes": report.timeline.expected_case_minutes,
             "basis": report.basis, "source": report.source, "as_of": report.as_of,
             **({"tokens": report.tokens.model_dump(mode="json")} if report.tokens is not None else {}),
+            **({"subscription": report.subscription.model_dump(mode="json")}
+               if report.subscription is not None else {}),
         }} if report.basis is not None else {}),
         "title": report.title,
         "tasks": [

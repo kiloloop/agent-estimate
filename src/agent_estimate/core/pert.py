@@ -51,25 +51,39 @@ class _ThresholdRegistry(dict[str, float]):
         self.registry_version = registry_version
 
 _MODEL_KEY_ALIASES: dict[str, str] = {
-    # Current fleet (2026-05)
-    "opus_4_x": "opus_4_x",
-    "opus_4_7": "opus_4_7",
-    "opus_4_6": "opus_4_6",
-    "claude": "opus_4_7",
-    "claude_opus": "opus_4_7",
-    "gpt_5_5": "gpt_5_5",
-    "codex": "gpt_5_5",
-    "codex_latest": "gpt_5_5",
-    "gpt_5_4": "gpt_5_4",
-    "production": "gpt_5_4",
+    # Current fleet (2026-09)
+    "fable_5_1": "fable_5_1",
+    "fable": "fable_5_1",
+    "claude_fable": "fable_5_1",
+    "opus_5_5": "opus_5_5",
+    "claude": "opus_5_5",
+    "claude_opus": "opus_5_5",
+    "gpt_6_astra": "gpt_6_astra",
+    "codex": "gpt_6_astra",
+    "codex_latest": "gpt_6_astra",
+    "gpt_6_sol": "gpt_6_sol",
+    "production": "gpt_6_sol",
     "gemini_3_1_pro": "gemini_3_1_pro",
     "gemini": "gemini_3_1_pro",
     "gemini_pro": "gemini_3_1_pro",
-    "sonnet_4_6": "sonnet_4_6",
-    "sonnet": "sonnet_4_6",
+    "sonnet_5_5": "sonnet_5_5",
+    "sonnet": "sonnet_5_5",
+    "gpt_6_luna": "gpt_6_luna",
     "haiku_4_5": "haiku_4_5",
     "haiku": "haiku_4_5",
-    # Legacy aliases
+    # Vendor model ids, as a typed request's execution_profile.model.id carries them
+    "claude_fable_5_1": "fable_5_1",
+    "claude_opus_5_5": "opus_5_5",
+    "claude_sonnet_5_5": "sonnet_5_5",
+    "claude_haiku_4_5": "haiku_4_5",
+    "claude_haiku_4_5_20251001": "haiku_4_5",
+    # Earlier models
+    "opus_4_x": "opus_4_x",
+    "opus_4_7": "opus_4_7",
+    "opus_4_6": "opus_4_6",
+    "gpt_5_5": "gpt_5_5",
+    "gpt_5_4": "gpt_5_4",
+    "sonnet_4_6": "sonnet_4_6",
     "opus": "opus",
     "gpt_5_3": "gpt_5_3",
     "gpt_5_2": "gpt_5_2",
@@ -91,9 +105,9 @@ def _resolve_threshold_model_key(model_key: str, *, agent_name: str | None = Non
     if normalized_model == "frontier" and agent_name:
         normalized_agent = _normalize_model_token(agent_name)
         if "claude" in normalized_agent:
-            return "opus_4_7"
+            return "opus_5_5"
         if "codex" in normalized_agent:
-            return "gpt_5_5"
+            return "gpt_6_astra"
         if "gemini" in normalized_agent:
             return "gemini_3_1_pro"
 
