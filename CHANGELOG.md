@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-09
+
+### Changed
+
+- Point the `claude`, `codex`, `production`, and `sonnet` aliases at Claude 5 and GPT-6 models ([reliability policy defaults](https://github.com/kiloloop/agent-estimate#reliability-policy-defaults)).
+- Require PyYAML 6.0.1, since 6.0 fails to build from source ([minimum dependencies](https://github.com/kiloloop/agent-estimate/blob/main/pyproject.toml)).
+
+### Added
+
+- Add local-policy reliability limits for Claude 5 and GPT-6 models ([reliability policy defaults](https://github.com/kiloloop/agent-estimate#reliability-policy-defaults)).
+- Forecast subscription meter points from a caller-supplied meter table, as an experimental opt-in ([subscription points](https://github.com/kiloloop/agent-estimate/blob/main/docs/subscription-points.md)).
+- Correct token forecasts per segment from caller-supplied observed tokens ([measured correction](https://github.com/kiloloop/agent-estimate/blob/main/docs/token-forecast-priors.md#measured-correction)).
+- Report expected cache-read tokens as a third token slot ([cache-read share](https://github.com/kiloloop/agent-estimate/blob/main/docs/token-forecast-priors.md#cache-read-share-a-third-slot)).
+- Inspect audit-corpus coverage and score verified native duration forecasts without changing calibration ([backtest](https://github.com/kiloloop/agent-estimate/blob/main/docs/backtest.md)).
+- Identify matching forecast inputs with a fingerprint that new nullable fields leave unchanged ([forecast keys](https://github.com/kiloloop/agent-estimate/blob/main/docs/binding-receipts.md#forecast-key)).
+- Bind forecasts to dispatches with immutable, verified receipts ([binding receipts](https://github.com/kiloloop/agent-estimate/blob/main/docs/binding-receipts.md)).
+
 ## [0.8.0] - 2026-09-06
 
 ### Changed
@@ -180,6 +197,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Modifier flags: `--warm-context`, `--spec-clarity`, `--issues`
 - PyPI package: `pip install agent-estimate`
 
+[0.9.0]: https://github.com/kiloloop/agent-estimate/releases/tag/v0.9.0
 [0.8.0]: https://github.com/kiloloop/agent-estimate/releases/tag/v0.8.0
 [0.7.5]: https://github.com/kiloloop/agent-estimate/releases/tag/v0.7.5
 [0.7.4]: https://github.com/kiloloop/agent-estimate/releases/tag/v0.7.4

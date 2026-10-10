@@ -152,7 +152,7 @@ class TestPipelineMetrMapping:
         task = report.tasks[0]
         assert task.metr_warning is not None
         assert (
-            "Work estimate (105.0m) exceeds opus_4_7 local reliability policy "
+            "Work estimate (105.0m) exceeds opus_5_5 local reliability policy "
             "(unmeasured) (90m)"
         ) in task.metr_warning
 

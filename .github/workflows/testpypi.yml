@@ -14,6 +14,10 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    outputs:
+      version: ${{ steps.identity.outputs.version }}
+      wheel: ${{ steps.identity.outputs.wheel }}
+      wheel_sha256: ${{ steps.identity.outputs.wheel_sha256 }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -22,28 +26,80 @@ jobs:
       - name: Build distributions
         run: |
           python -m pip install --upgrade pip
-          pip install build==1.5.0 twine==7.0.0
+          pip install build==1.6.1 twine==7.0.0
           python -m build
           python -m twine check dist/*
+      - name: Record the built wheel's identity
+        id: identity
+        run: |
+          version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          shopt -s nullglob
+          wheels=(dist/*.whl)
+          if [ "${#wheels[@]}" -ne 1 ]; then
+            echo "::error::expected one wheel in dist/, found ${#wheels[@]}"
+            exit 1
+          fi
+          wheel=$(basename "${wheels[0]}")
+          case "$wheel" in
+            "agent_estimate-${version}-"*) ;;
+            *) echo "::error::built wheel $wheel does not carry version $version"; exit 1 ;;
+          esac
+          {
+            echo "version=$version"
+            echo "wheel=$wheel"
+            echo "wheel_sha256=$(sha256sum "dist/$wheel" | cut -d' ' -f1)"
+          } >> "$GITHUB_OUTPUT"
       - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
         with:
           repository-url: https://test.pypi.org/legacy/
           skip-existing: true
 
+  # The smoke must exercise the wheel built above, not whatever pip resolves: pip gives
+  # an --extra-index-url no lower priority, so an unpinned install can land a PyPI or a
+  # stale TestPyPI artifact. Fetch from TestPyPI alone and check the hash, which also
+  # catches a skip-existing upload whose already-published wheel came from other source.
   smoke-install:
     runs-on: ubuntu-latest
     needs: publish-testpypi
     permissions: {}
+    env:
+      VERSION: ${{ needs.publish-testpypi.outputs.version }}
+      WHEEL: ${{ needs.publish-testpypi.outputs.wheel }}
+      WHEEL_SHA256: ${{ needs.publish-testpypi.outputs.wheel_sha256 }}
     steps:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
-      - name: Install from TestPyPI
+      - name: Fetch the uploaded wheel from TestPyPI
         run: |
           python -m pip install --upgrade pip
-          pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple agent-estimate
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            if pip download --no-deps --only-binary :all: --index-url https://test.pypi.org/simple/ \
+                --dest dl "agent-estimate==${VERSION}"; then
+              break
+            fi
+            if [ "$attempt" -eq 10 ]; then
+              echo "::error::agent-estimate==${VERSION} never became installable from TestPyPI"
+              exit 1
+            fi
+            sleep 15
+          done
+          if [ ! -f "dl/${WHEEL}" ]; then
+            echo "::error::TestPyPI served $(ls dl), expected ${WHEEL}"
+            exit 1
+          fi
+          if ! echo "${WHEEL_SHA256}  dl/${WHEEL}" | sha256sum -c; then
+            echo "::error::TestPyPI's ${WHEEL} is not the wheel this run built (skip-existing kept an earlier upload)"
+            exit 1
+          fi
+      - name: Install the fetched wheel
+        run: pip install "dl/${WHEEL}"
       - name: CLI smoke test
         run: |
-          agent-estimate --version
+          reported=$(agent-estimate --version)
+          if [ "$reported" != "agent-estimate ${VERSION}" ]; then
+            echo "::error::installed CLI reports '$reported', expected agent-estimate ${VERSION}"
+            exit 1
+          fi
           agent-estimate estimate "Smoke test from TestPyPI"

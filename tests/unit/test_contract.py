@@ -71,8 +71,10 @@ SHAPES = [
     (
         schema.ForecastRecord,
         "schema_version request created_at_utc engine",
-        "forecast_id expected_minutes expected_files_touched expected_review_minutes basis source as_of tokens",
-        "forecast_id expected_minutes expected_files_touched expected_review_minutes source as_of",
+        ("forecast_id expected_minutes expected_files_touched expected_review_minutes basis source "
+         "as_of tokens subscription"),
+        ("forecast_id expected_minutes expected_files_touched expected_review_minutes source as_of "
+         "subscription"),
     ),
     (
         schema.OutcomeObservation,
@@ -102,15 +104,23 @@ SHAPES = [
     (
         schema.TokenForecast,
         "",
-        "expected_tokens_total expected_tokens_output basis source as_of population warnings",
-        "expected_tokens_total expected_tokens_output source as_of population",
+        (
+            "expected_tokens_total expected_tokens_output expected_tokens_cache_read basis source "
+            "as_of population warnings segment window"
+        ),
+        (
+            "expected_tokens_total expected_tokens_output expected_tokens_cache_read source as_of "
+            "population segment window"
+        ),
     ),
     (
         schema.LocalTokenPrior,
         "basis source as_of population",
-        "expected_tokens_total expected_tokens_output warnings",
-        "expected_tokens_total expected_tokens_output",
+        "expected_tokens_total expected_tokens_output expected_tokens_cache_read warnings segment window",
+        "expected_tokens_total expected_tokens_output expected_tokens_cache_read segment window",
     ),
+    (schema.TokenSegment, "task_type execution_profile_id n", "", ""),
+    (schema.ObservationWindow, "start end", "", ""),
     (
         schema.ObservedTokens,
         "",
@@ -163,8 +173,13 @@ VERSIONS = [
 ]
 
 
-def test_six_public_artifact_names():
-    assert set(contract.__all__) == {model.__name__ for model, _ in VERSIONS}
+def test_public_contract_surface():
+    assert set(contract.__all__) == {model.__name__ for model, _ in VERSIONS} | {
+        "BindingReceipt", "ReceiptError", "forecast_key", "forecast_sha256",
+        "read_binding_receipt", "receipt_path", "write_binding_receipt",
+        "TokenObservation", "TokenObservations", "fit_segments", "measured_token_forecast",
+        "MeterTable", "subscription_forecast",
+    }
     for model, _ in VERSIONS:
         assert getattr(contract, model.__name__) is model
 
@@ -216,6 +231,8 @@ def test_finite_enums(model, field, values):
         (schema.ForecastRecord, "request", schema.EstimateRequest),
         (schema.ForecastRecord, "engine", schema.EngineProvenance),
         (schema.ForecastRecord, "tokens", schema.TokenForecast),
+        (schema.TokenForecast, "segment", schema.TokenSegment),
+        (schema.TokenForecast, "window", schema.ObservationWindow),
         (schema.OutcomeObservation, "source", schema.SourceReference),
         (schema.OutcomeObservation, "actual", schema.ObservedActuals),
         (schema.ObservedActuals, "tokens", schema.ObservedTokens),

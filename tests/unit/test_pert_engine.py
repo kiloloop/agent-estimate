@@ -22,6 +22,7 @@ from agent_estimate.core.modifiers import (
     compute_review_overhead,
 )
 from agent_estimate.core.pert import (
+    _MODEL_KEY_ALIASES,
     check_metr_threshold,
     compute_pert,
     estimate_task,
@@ -243,9 +244,10 @@ class TestMetrThresholds:
     @pytest.mark.parametrize(
         ("model_key", "expected_model_key", "expected_threshold"),
         [
-            ("claude", "opus_4_7", 90.0),
+            ("claude", "opus_5_5", 90.0),
             ("opus_4_6", "opus_4_6", 90.0),
-            ("codex", "gpt_5_5", 90.0),
+            ("codex", "gpt_6_astra", 90.0),
+            ("production", "gpt_6_sol", 60.0),
             ("gemini", "gemini_3_1_pro", 45.0),
             ("gpt-5.3", "gpt_5_3", 60.0),
         ],
@@ -254,10 +256,10 @@ class TestMetrThresholds:
         self, model_key: str, expected_model_key: str, expected_threshold: float
     ) -> None:
         thresholds = {
-            "opus_4_7": 90.0,
+            "opus_5_5": 90.0,
             "opus_4_6": 90.0,
-            "gpt_5_5": 90.0,
-            "gpt_5_4": 60.0,
+            "gpt_6_astra": 90.0,
+            "gpt_6_sol": 60.0,
             "gemini_3_1_pro": 45.0,
             "gpt_5_3": 60.0,
         }
@@ -268,12 +270,38 @@ class TestMetrThresholds:
         assert result.model_key == expected_model_key
         assert result.threshold_minutes == pytest.approx(expected_threshold)
 
+    @pytest.mark.parametrize(
+        ("model_id", "expected_model_key", "expected_threshold"),
+        [
+            ("claude-fable-5-1", "fable_5_1", 90.0),
+            ("claude-opus-5-5", "opus_5_5", 90.0),
+            ("claude-sonnet-5-5", "sonnet_5_5", 30.0),
+            ("claude-haiku-4-5", "haiku_4_5", 15.0),
+            ("claude-haiku-4-5-20251001", "haiku_4_5", 15.0),
+            ("gpt-6-astra", "gpt_6_astra", 90.0),
+            ("gpt-6-sol", "gpt_6_sol", 60.0),
+            ("gpt-6-luna", "gpt_6_luna", 15.0),
+        ],
+    )
+    def test_vendor_model_id_resolves_to_shipped_row(
+        self, model_id: str, expected_model_key: str, expected_threshold: float
+    ) -> None:
+        result = check_metr_threshold(model_id, expected_threshold + 1.0, fallback_threshold=None)
+        assert result is not None
+        assert result.model_key == expected_model_key
+        assert result.threshold_minutes == pytest.approx(expected_threshold)
+        assert "local reliability policy (unmeasured)" in result.message
+
+    def test_every_alias_target_has_a_shipped_row(self) -> None:
+        thresholds = load_metr_thresholds()
+        assert sorted(set(_MODEL_KEY_ALIASES.values()) - set(thresholds)) == []
+
     def test_frontier_model_tier_resolves_by_assigned_agent(self) -> None:
         thresholds = {
-            "opus_4_7": 90.0,
+            "opus_5_5": 90.0,
             "opus_4_6": 90.0,
-            "gpt_5_5": 90.0,
-            "gpt_5_4": 60.0,
+            "gpt_6_astra": 90.0,
+            "gpt_6_sol": 60.0,
             "gemini_3_1_pro": 45.0,
         }
         claude_result = check_metr_threshold(
@@ -299,7 +327,7 @@ class TestMetrThresholds:
         )
         assert claude_result is None  # 70 < 90 opus threshold
         assert codex_result is not None
-        assert codex_result.model_key == "gpt_5_5"
+        assert codex_result.model_key == "gpt_6_astra"
         assert codex_result.threshold_minutes == pytest.approx(90.0)
         assert gemini_result is not None
         assert gemini_result.model_key == "gemini_3_1_pro"

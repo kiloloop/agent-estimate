@@ -5,6 +5,7 @@ import logging
 import typer
 
 from agent_estimate.audit import configure_audit_logger
+from agent_estimate.cli.commands.backtest import run as run_backtest
 from agent_estimate.cli.commands.calibrate import run as run_calibrate
 from agent_estimate.cli.commands.estimate import run as run_estimate
 from agent_estimate.cli.commands.session import run as run_session
@@ -43,6 +44,7 @@ def _global_options(
         logging.basicConfig(level=logging.DEBUG, format="%(levelname)s: %(message)s", force=True)
 
 
+app.command("backtest")(run_backtest)
 app.command("estimate")(run_estimate)
 app.command("calibrate")(run_calibrate)
 app.command("validate")(run_validate)

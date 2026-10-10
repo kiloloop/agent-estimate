@@ -55,7 +55,7 @@ body:
     id: version
     attributes:
       label: agent-estimate version
-      placeholder: "0.8.0"
+      placeholder: "0.9.0"
     validations:
       required: true
 

@@ -148,5 +148,5 @@ def test_estimate_command_json_format_outputs_json() -> None:
     assert "timeline" in payload
     assert payload["footer"] == {
         "engine_version": __version__,
-        "registry_version": "v0.7.5-policy-1",
+        "registry_version": "v0.9-policy-1",
     }

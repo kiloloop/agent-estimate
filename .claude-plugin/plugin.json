@@ -1,7 +1,7 @@
 {
   "name": "agent-estimate",
   "description": "Effort estimation for AI coding agents — PERT three-point estimation with METR reliability thresholds and wave planning",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "skills": ["./skills/estimate/claude"],
   "author": {
     "name": "Kiloloop"

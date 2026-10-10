@@ -17,7 +17,7 @@ AI agents can write the code — but *how long will the task actually take?* Man
 
 `agent-estimate` closes that gap in one command: a three-point PERT timeline built from priors drawn from 33 internal coding dispatches and 6 brainstorm dispatches, plus a human-speed comparison so you see the compression before you spend the compute. It sizes the task, picks a tier, routes it to a model, and flags when the work exceeds that model's configured reliability policy — forecasts in seconds, not meetings.
 
-Multi-model matters because the models aren't interchangeable. A measured p80 horizon is the human-expert task duration at which a model is estimated to succeed 80% of the time. The shipped limits below are instead provenance-labeled local policy (unmeasured), because current models such as Opus 4.7 and GPT-5.5 do not have matching published measurements. agent-estimate models the whole fleet, not a single agent — so the number reflects who actually runs the work.
+Multi-model matters because the models aren't interchangeable. A measured p80 horizon is the human-expert task duration at which a model is estimated to succeed 80% of the time. The shipped limits below are instead provenance-labeled local policy (unmeasured), because current models such as Opus 5.5 and GPT-6 Astra do not have matching published measurements. agent-estimate models the whole fleet, not a single agent — so the number reflects who actually runs the work.
 
 ## Quick Start
 
@@ -124,15 +124,28 @@ than a cap; inspect the rows before using it. Without that attestation,
 `calibrate` exits 2 with guidance on stderr.
 
 **Token honesty.** Typed forecasts default to `tokens.basis: unavailable`, with
-null `expected_tokens_total` and `expected_tokens_output`. Total means processed
-tokens including cache carry; output is a separate count included in total.
-A caller-supplied prior uses `basis: local-policy`, a source, date, population,
+null `expected_tokens_total`, `expected_tokens_output` and
+`expected_tokens_cache_read`. Total means processed tokens including cache carry;
+output and cache-read tokens are separate counts included in total. A
+caller-supplied prior uses `basis: local-policy`, a source, date, population,
 and a mandatory population mismatch warning. An absent count stays unavailable;
-zero is a supplied count. These are not calibrated forecasts. JSON includes
-`forecast.tokens` only when a prior is supplied; Markdown then shows both slots
-and their provenance. There are **no packaged token priors or numeric rates**.
-See the [explicitly uncalibrated rate-shape example](docs/token-forecast-priors.md#rate-shape-example-only--not-calibrated)
-for caller-owned policy inputs.
+zero is a supplied count. A caller can also pass its own observed tokens per
+closed leg with `--token-observations`; the request's task-type × execution-profile
+segment then reports `basis: measured` at five or more legs, as a shrunk
+log-median that names the segment, its `n` and the observation window. JSON
+includes `forecast.tokens` when a prior or observations are supplied; Markdown
+then shows the slots and their provenance. There are **no packaged token priors,
+numeric rates or coefficients**. See the
+[explicitly uncalibrated rate-shape example](docs/token-forecast-priors.md#rate-shape-example-only--not-calibrated)
+and the [measured correction](docs/token-forecast-priors.md#measured-correction).
+
+**Subscription points (experimental).** `--meter-table` applies a caller-supplied,
+dated meter table to the token forecast and reports `forecast.subscription` for
+the request's assigned agent: expected points, the fraction of the reset window,
+and their basis. The meter is selected by `execution_profile.model.id`. Points
+stay `unavailable`, with the reason, without a token forecast, its cache-read
+count, a model id or a meter for it. There are **no packaged meter numbers**.
+See [subscription points](docs/subscription-points.md).
 
 Upgrading configuration or JSON consumers? Read the
 [v0.8 migration notes](docs/migration-v0.8.md) for the two removed surfaces.
@@ -163,16 +176,18 @@ agent-estimate produces three-point [PERT](https://en.wikipedia.org/wiki/Program
 
 ### Reliability policy defaults
 
-| Model | Work limit | Basis |
-|-------|------------|-------|
-| Opus 4.7 | 90 min | Local policy (unmeasured) |
-| GPT-5.5 | 90 min | Local policy (unmeasured) |
-| GPT-5.4 | 60 min | Local policy (unmeasured) |
-| Gemini 3.1 Pro | 45 min | Local policy (unmeasured) |
-| Sonnet 4.6 | 30 min | Local policy (unmeasured) |
-| Haiku 4.5 | 15 min | Local policy (unmeasured) |
+| Model | Work limit | Basis | As of |
+|-------|------------|-------|-------|
+| Fable 5.1 | 90 min | Local policy (unmeasured) | 2026-09-28 |
+| Opus 5.5 | 90 min | Local policy (unmeasured) | 2026-09-28 |
+| GPT-6 Astra | 90 min | Local policy (unmeasured) | 2026-09-28 |
+| GPT-6 Sol | 60 min | Local policy (unmeasured) | 2026-09-28 |
+| Gemini 3.1 Pro | 45 min | Local policy (unmeasured) | 2026-08-23 |
+| Sonnet 5.5 | 30 min | Local policy (unmeasured) | 2026-09-28 |
+| GPT-6 Luna | 15 min | Local policy (unmeasured) | 2026-09-28 |
+| Haiku 4.5 | 15 min | Local policy (unmeasured) | 2026-08-23 |
 
-Every row records `basis`, `source`, `source_version`, and `as_of` in `metr_thresholds.yaml`; the defaults above come from the agent-estimate v0.7.5 local-policy registry as of 2026-08-23. `opus_4_x` is a forward-compatible alias that resolves to the current Opus policy. Legacy keys (`opus_4_6`, GPT-5/5.2/5.3, Gemini 3 Pro, Sonnet) stay supported. The bundled thinking-level baseline is Claude Code high and Codex extra-high — shift with `--spec-clarity` and `--warm-context` for other setups.
+Every row records `basis`, `source`, `source_version`, and `as_of` in `metr_thresholds.yaml`; the source of every default above is the agent-estimate default reliability policy (registry `v0.9-policy-1`). A row added in that registry carries the limit of the tier it fills, so no limit changed. The `claude`, `codex`, `production`, `sonnet`, and `haiku` aliases resolve to Opus 5.5, GPT-6 Astra, GPT-6 Sol, Sonnet 5.5, and Haiku 4.5, and a typed request's vendor model id (`claude-fable-5-1`, `gpt-6-sol`) resolves to its row. Earlier keys (`opus_4_x`, `opus_4_7`, `opus_4_6`, `opus`, `sonnet_4_6`, GPT-5 through GPT-5.5, Gemini 3 Pro) stay supported. The bundled thinking-level baseline is Claude Code high and Codex extra-high — shift with `--spec-clarity` and `--warm-context` for other setups.
 
 ## Examples
 
@@ -200,7 +215,7 @@ $ agent-estimate estimate --file tasks.txt
 
 ## Reliability Horizon Warnings
 
-- **Add known_debt.md as standard protocol memory file**: Work estimate (60.4m) exceeds gpt_5_4 local reliability policy (unmeasured) (60m). Consider splitting the task.
+- **Add known_debt.md as standard protocol memory file**: Work estimate (60.4m) exceeds gpt_6_sol local reliability policy (unmeasured) (60m). Consider splitting the task.
 - **Write quickstart guide with protocol comparison table**: Work estimate (60.4m) exceeds gemini_3_1_pro local reliability policy (unmeasured) (45m). Consider splitting the task.
 ```
 

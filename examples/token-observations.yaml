@@ -1,0 +1,188 @@
+# Run: agent-estimate estimate --spec examples/estimate-request.yaml \
+#        --token-observations examples/token-observations.yaml --format json
+#
+# The shape of the caller's token-per-leg join: one observation per CLOSED leg,
+# keyed to its segment (task_type × execution_profile_id) and, where a binding
+# receipt exists, to the forecast it executed. Every number below is synthetic
+# and illustrates the shape only; the package ships no token numbers.
+#
+# Six segments: five reach the minimum of five legs and fit; the sixth
+# (documentation × frontier-docs-v1, n=2) stays unavailable.
+schema_version: agent-estimate/token-observations/v1
+source: synthetic token-per-leg join (example only)
+window:
+  start: 2026-09-01
+  end: 2026-09-28
+observations:
+  # coding × example-profile-1 — matches examples/estimate-request.yaml (n=7)
+  - task_type: coding
+    execution_profile_id: example-profile-1
+    tokens_total: 4200000
+    tokens_output: 31000
+    tokens_cache_read: 3400000
+    forecast_key: fk-example-0001
+    execution_id: msg-20000101000000-dispatcher-0001
+  - task_type: coding
+    execution_profile_id: example-profile-1
+    tokens_total: 6100000
+    tokens_output: 45000
+    tokens_cache_read: 5000000
+    forecast_key: fk-example-0002
+    execution_id: msg-20000101000000-dispatcher-0002
+  - task_type: coding
+    execution_profile_id: example-profile-1
+    tokens_total: 3300000
+    tokens_output: 22000
+    tokens_cache_read: 2500000
+  - task_type: coding
+    execution_profile_id: example-profile-1
+    tokens_total: 9800000
+    tokens_output: 70000
+    tokens_cache_read: 8300000
+  - task_type: coding
+    execution_profile_id: example-profile-1
+    tokens_total: 5400000
+    tokens_output: 38000
+    tokens_cache_read: 4300000
+  - task_type: coding
+    execution_profile_id: example-profile-1
+    tokens_total: 7700000
+    tokens_output: 52000
+  - task_type: coding
+    execution_profile_id: example-profile-1
+    tokens_total: 2900000
+    tokens_output: 19000
+    tokens_cache_read: 2100000
+  # coding × frontier-review-v1 (n=5)
+  - task_type: coding
+    execution_profile_id: frontier-review-v1
+    tokens_total: 1500000
+    tokens_output: 9000
+    tokens_cache_read: 1200000
+  - task_type: coding
+    execution_profile_id: frontier-review-v1
+    tokens_total: 2200000
+    tokens_output: 12000
+    tokens_cache_read: 1800000
+  - task_type: coding
+    execution_profile_id: frontier-review-v1
+    tokens_total: 1100000
+    tokens_output: 7000
+    tokens_cache_read: 900000
+  - task_type: coding
+    execution_profile_id: frontier-review-v1
+    tokens_total: 3000000
+    tokens_output: 16000
+    tokens_cache_read: 2500000
+  - task_type: coding
+    execution_profile_id: frontier-review-v1
+    tokens_total: 1800000
+    tokens_output: 10000
+    tokens_cache_read: 1400000
+  # coding × production-impl-v1 (n=6; cache-read known for four legs only)
+  - task_type: coding
+    execution_profile_id: production-impl-v1
+    tokens_total: 12000000
+    tokens_output: 150000
+    tokens_cache_read: 9000000
+  - task_type: coding
+    execution_profile_id: production-impl-v1
+    tokens_total: 8500000
+    tokens_output: 110000
+  - task_type: coding
+    execution_profile_id: production-impl-v1
+    tokens_total: 15500000
+    tokens_output: 190000
+    tokens_cache_read: 12000000
+  - task_type: coding
+    execution_profile_id: production-impl-v1
+    tokens_total: 10200000
+    tokens_output: 125000
+    tokens_cache_read: 7600000
+  - task_type: coding
+    execution_profile_id: production-impl-v1
+    tokens_total: 6900000
+    tokens_output: 84000
+  - task_type: coding
+    execution_profile_id: production-impl-v1
+    tokens_total: 13100000
+    tokens_output: 160000
+    tokens_cache_read: 10000000
+  # coding × production-review-v1 (n=8)
+  - task_type: coding
+    execution_profile_id: production-review-v1
+    tokens_total: 2600000
+    tokens_output: 21000
+    tokens_cache_read: 2000000
+  - task_type: coding
+    execution_profile_id: production-review-v1
+    tokens_total: 3100000
+    tokens_output: 26000
+    tokens_cache_read: 2400000
+  - task_type: coding
+    execution_profile_id: production-review-v1
+    tokens_total: 1900000
+    tokens_output: 15000
+    tokens_cache_read: 1500000
+  - task_type: coding
+    execution_profile_id: production-review-v1
+    tokens_total: 4400000
+    tokens_output: 36000
+    tokens_cache_read: 3500000
+  - task_type: coding
+    execution_profile_id: production-review-v1
+    tokens_total: 2300000
+    tokens_output: 18000
+    tokens_cache_read: 1800000
+  - task_type: coding
+    execution_profile_id: production-review-v1
+    tokens_total: 3700000
+    tokens_output: 30000
+    tokens_cache_read: 2900000
+  - task_type: coding
+    execution_profile_id: production-review-v1
+    tokens_total: 2800000
+    tokens_output: 23000
+    tokens_cache_read: 2200000
+  - task_type: coding
+    execution_profile_id: production-review-v1
+    tokens_total: 5200000
+    tokens_output: 41000
+    tokens_cache_read: 4200000
+  # research × production-research-v1 (n=5)
+  - task_type: research
+    execution_profile_id: production-research-v1
+    tokens_total: 7400000
+    tokens_output: 96000
+    tokens_cache_read: 5500000
+  - task_type: research
+    execution_profile_id: production-research-v1
+    tokens_total: 9900000
+    tokens_output: 130000
+    tokens_cache_read: 7600000
+  - task_type: research
+    execution_profile_id: production-research-v1
+    tokens_total: 5800000
+    tokens_output: 71000
+    tokens_cache_read: 4300000
+  - task_type: research
+    execution_profile_id: production-research-v1
+    tokens_total: 12600000
+    tokens_output: 170000
+    tokens_cache_read: 9800000
+  - task_type: research
+    execution_profile_id: production-research-v1
+    tokens_total: 8100000
+    tokens_output: 105000
+    tokens_cache_read: 6200000
+  # documentation × frontier-docs-v1 (n=2; below the bar, stays unavailable)
+  - task_type: documentation
+    execution_profile_id: frontier-docs-v1
+    tokens_total: 1300000
+    tokens_output: 24000
+    tokens_cache_read: 900000
+  - task_type: documentation
+    execution_profile_id: frontier-docs-v1
+    tokens_total: 1700000
+    tokens_output: 31000
+    tokens_cache_read: 1200000
