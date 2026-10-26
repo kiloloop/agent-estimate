@@ -15,14 +15,6 @@ agents:
     parallelism: 3
     cost_per_turn: 0.08
     model_tier: production
-  - name: Gemini
-    capabilities:
-      - research
-      - synthesis
-      - review
-    parallelism: 2
-    cost_per_turn: 0.09
-    model_tier: frontier
 
 settings:
   friction_multiplier: 1.15

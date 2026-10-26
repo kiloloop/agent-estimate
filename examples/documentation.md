@@ -53,7 +53,6 @@ agent in the wave.  Per-task values below are the naive (pre-amortization) figur
 | --- | --- | --- | --- |
 | Claude | 1 | 29.7m | $0.71 |
 | Codex | 0 | 0m | $0.00 |
-| Gemini | 0 | 0m | $0.00 |
 
 ### Critical Path
 

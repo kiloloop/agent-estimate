@@ -51,7 +51,7 @@ class _ThresholdRegistry(dict[str, float]):
         self.registry_version = registry_version
 
 _MODEL_KEY_ALIASES: dict[str, str] = {
-    # Current fleet (2026-09)
+    # Current fleet (2026-10)
     "fable_5_1": "fable_5_1",
     "fable": "fable_5_1",
     "claude_fable": "fable_5_1",
@@ -61,11 +61,9 @@ _MODEL_KEY_ALIASES: dict[str, str] = {
     "gpt_6_astra": "gpt_6_astra",
     "codex": "gpt_6_astra",
     "codex_latest": "gpt_6_astra",
+    "gpt_6_1_sol": "gpt_6_1_sol",
     "gpt_6_sol": "gpt_6_sol",
-    "production": "gpt_6_sol",
-    "gemini_3_1_pro": "gemini_3_1_pro",
-    "gemini": "gemini_3_1_pro",
-    "gemini_pro": "gemini_3_1_pro",
+    "production": "gpt_6_1_sol",
     "sonnet_5_5": "sonnet_5_5",
     "sonnet": "sonnet_5_5",
     "gpt_6_luna": "gpt_6_luna",
@@ -88,7 +86,6 @@ _MODEL_KEY_ALIASES: dict[str, str] = {
     "gpt_5_3": "gpt_5_3",
     "gpt_5_2": "gpt_5_2",
     "gpt_5": "gpt_5",
-    "gemini_3_pro": "gemini_3_pro",
 }
 
 
@@ -108,8 +105,6 @@ def _resolve_threshold_model_key(model_key: str, *, agent_name: str | None = Non
             return "opus_5_5"
         if "codex" in normalized_agent:
             return "gpt_6_astra"
-        if "gemini" in normalized_agent:
-            return "gemini_3_1_pro"
 
     return normalized_model
 

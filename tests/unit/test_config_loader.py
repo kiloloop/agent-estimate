@@ -123,7 +123,7 @@ settings:
 def test_load_default_config_has_expected_profiles() -> None:
     config = load_default_config()
 
-    assert [agent.name for agent in config.agents] == ["Claude", "Codex", "Gemini"]
+    assert [agent.name for agent in config.agents] == ["Claude", "Codex"]
 
 
 def test_entry_point_group_is_stable() -> None:
@@ -193,26 +193,26 @@ settings:
 def test_load_config_discovers_callable_entry_point_profiles(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    def _gemini_profile_factory() -> dict[str, object]:
+    def _plugin_profile_factory() -> dict[str, object]:
         return {
-            "name": "Gemini",
+            "name": "Plugin",
             "capabilities": ["research", "synthesis", "review"],
             "parallelism": 2,
             "cost_per_turn": 0.09,
-            "model_tier": "gemini-3-pro",
+            "model_tier": "plugin-tier",
         }
 
     config_path = _write(tmp_path, "config.yaml", VALID_CONFIG)
     monkeypatch.setattr(
         config_loader,
         "_iter_agent_entry_points",
-        lambda: [_FakeEntryPoint("gemini_plugin", _gemini_profile_factory)],
+        lambda: [_FakeEntryPoint("plugin_agent", _plugin_profile_factory)],
     )
 
     config = load_config(config_path)
 
-    assert [agent.name for agent in config.agents] == ["Claude", "Gemini"]
-    assert config.agents[1].model_tier == "gemini-3-pro"
+    assert [agent.name for agent in config.agents] == ["Claude", "Plugin"]
+    assert config.agents[1].model_tier == "plugin-tier"
 
 
 def test_load_config_skips_broken_entry_point_profile(

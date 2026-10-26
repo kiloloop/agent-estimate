@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-25
+
+### Changed
+
+- Point the `production` alias at GPT-6.1 Sol ([reliability policy defaults](https://github.com/kiloloop/agent-estimate#reliability-policy-defaults)).
+
+### Added
+
+- Add a local-policy reliability limit for GPT-6.1 Sol ([reliability policy defaults](https://github.com/kiloloop/agent-estimate#reliability-policy-defaults)).
+
+### Removed
+
+- Remove Gemini from the default fleet, so the bundled defaults model Claude and Codex ([agent fleet](https://github.com/kiloloop/agent-estimate#agent-fleet)).
+- Remove the Gemini aliases and reliability rows; an agent named Gemini gets the fallback limit ([reliability policy defaults](https://github.com/kiloloop/agent-estimate#reliability-policy-defaults)).
+
 ## [0.9.0] - 2026-10-09
 
 ### Changed
@@ -197,6 +212,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Modifier flags: `--warm-context`, `--spec-clarity`, `--issues`
 - PyPI package: `pip install agent-estimate`
 
+[0.10.0]: https://github.com/kiloloop/agent-estimate/releases/tag/v0.10.0
 [0.9.0]: https://github.com/kiloloop/agent-estimate/releases/tag/v0.9.0
 [0.8.0]: https://github.com/kiloloop/agent-estimate/releases/tag/v0.8.0
 [0.7.5]: https://github.com/kiloloop/agent-estimate/releases/tag/v0.7.5

@@ -39,7 +39,7 @@ For a whole backlog:
 
 ~~~
 Estimate every open issue in this repo with agent-estimate, group them into parallel
-waves, and tell me the total wall-clock time for a 3-agent fleet versus doing them
+waves, and tell me the total wall-clock time for a 2-agent fleet versus doing them
 sequentially myself.
 ~~~
 
@@ -50,7 +50,7 @@ pip install agent-estimate
 agent-estimate estimate "your task description here"
 ```
 
-No config required — sensible defaults for a 3-agent fleet (Claude, Codex, Gemini). Point it at a file or GitHub issues when you're ready:
+No config required — sensible defaults for a 2-agent fleet (Claude, Codex). Point it at a file or GitHub issues when you're ready:
 
 ```bash
 agent-estimate estimate --file tasks.txt
@@ -181,13 +181,13 @@ agent-estimate produces three-point [PERT](https://en.wikipedia.org/wiki/Program
 | Fable 5.1 | 90 min | Local policy (unmeasured) | 2026-09-28 |
 | Opus 5.5 | 90 min | Local policy (unmeasured) | 2026-09-28 |
 | GPT-6 Astra | 90 min | Local policy (unmeasured) | 2026-09-28 |
+| GPT-6.1 Sol | 60 min | Local policy (unmeasured) | 2026-10-21 |
 | GPT-6 Sol | 60 min | Local policy (unmeasured) | 2026-09-28 |
-| Gemini 3.1 Pro | 45 min | Local policy (unmeasured) | 2026-08-23 |
 | Sonnet 5.5 | 30 min | Local policy (unmeasured) | 2026-09-28 |
 | GPT-6 Luna | 15 min | Local policy (unmeasured) | 2026-09-28 |
 | Haiku 4.5 | 15 min | Local policy (unmeasured) | 2026-08-23 |
 
-Every row records `basis`, `source`, `source_version`, and `as_of` in `metr_thresholds.yaml`; the source of every default above is the agent-estimate default reliability policy (registry `v0.9-policy-1`). A row added in that registry carries the limit of the tier it fills, so no limit changed. The `claude`, `codex`, `production`, `sonnet`, and `haiku` aliases resolve to Opus 5.5, GPT-6 Astra, GPT-6 Sol, Sonnet 5.5, and Haiku 4.5, and a typed request's vendor model id (`claude-fable-5-1`, `gpt-6-sol`) resolves to its row. Earlier keys (`opus_4_x`, `opus_4_7`, `opus_4_6`, `opus`, `sonnet_4_6`, GPT-5 through GPT-5.5, Gemini 3 Pro) stay supported. The bundled thinking-level baseline is Claude Code high and Codex extra-high — shift with `--spec-clarity` and `--warm-context` for other setups.
+Every row records `basis`, `source`, `source_version`, and `as_of` in `metr_thresholds.yaml`; the source of every default above is the agent-estimate default reliability policy (registry `v0.9-policy-2`). A row added in that registry carries the limit of the tier it fills, so no limit changed. The `claude`, `codex`, `production`, `sonnet`, and `haiku` aliases resolve to Opus 5.5, GPT-6 Astra, GPT-6.1 Sol, Sonnet 5.5, and Haiku 4.5, and a typed request's vendor model id (`claude-fable-5-1`, `gpt-6.1-sol`) resolves to its row. Earlier keys (`opus_4_x`, `opus_4_7`, `opus_4_6`, `opus`, `sonnet_4_6`, GPT-5 through GPT-5.5) stay supported. The bundled thinking-level baseline is Claude Code high and Codex extra-high — shift with `--spec-clarity` and `--warm-context` for other setups.
 
 ## Examples
 
@@ -197,7 +197,7 @@ Real estimates from production use — including the misses.
 
 **An honest over-estimate.** We pre-registered a UI mockup build at ~95 minutes with no prior app-dev data. Two agents did it in parallel in 12 and 25 minutes — a 4–8x over-estimate. agent-estimate now ships an `app_dev` prior shaped by that result. The miss stays in the README because calibration means showing where you were wrong.
 
-**Three tasks, three agents, in parallel** — what the tool prints, including the reliability-policy flags. Input is the three-task `tasks.txt` from [`examples/multi-agent.md`](./examples/multi-agent.md); the output below is captured from a real run, trimmed to the timeline and warnings (the full report — per-task PERT table, wave plan, assumptions, and agent loads — is in that example):
+**Three tasks, two agents, in parallel** — what the tool prints, including the reliability-policy flags. Input is the three-task `tasks.txt` from [`examples/multi-agent.md`](./examples/multi-agent.md); the output below is captured from a real run, trimmed to the timeline and warnings (the full report — per-task PERT table, wave plan, assumptions, and agent loads — is in that example):
 
 ```text
 $ agent-estimate estimate --file tasks.txt
@@ -215,11 +215,10 @@ $ agent-estimate estimate --file tasks.txt
 
 ## Reliability Horizon Warnings
 
-- **Add known_debt.md as standard protocol memory file**: Work estimate (60.4m) exceeds gpt_6_sol local reliability policy (unmeasured) (60m). Consider splitting the task.
-- **Write quickstart guide with protocol comparison table**: Work estimate (60.4m) exceeds gemini_3_1_pro local reliability policy (unmeasured) (45m). Consider splitting the task.
+- **Add known_debt.md as standard protocol memory file**: Work estimate (60.4m) exceeds gpt_6_1_sol local reliability policy (unmeasured) (60m). Consider splitting the task.
 ```
 
-~75 minutes wall-clock versus the work-only human equivalent, at an estimated $3.51 fleet cost — plus policy flags when assigned work exceeds a model's configured limit, so you split it or add a checkpoint before dispatching. Human review is modeled separately. The same three tasks were later run by real agents; the retro is in the example file. More in [`examples/`](./examples/) — coding S/M, research, documentation, multi-agent.
+~75 minutes wall-clock versus the work-only human equivalent, at an estimated $3.87 fleet cost — plus policy flags when assigned work exceeds a model's configured limit, so you split it or add a checkpoint before dispatching. Human review is modeled separately. The same three tasks were later run by real agents; the retro is in the example file. More in [`examples/`](./examples/) — coding S/M, research, documentation, multi-agent.
 
 ## Integrations
 

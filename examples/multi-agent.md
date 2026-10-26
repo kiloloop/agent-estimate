@@ -28,13 +28,13 @@ Forecast basis: `expected-wall`; source: bundled task-category priors; n=0 calib
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | **Implement add-agent CLI command with SPEC.md generation** | coding | M | Claude | 25m / 50m / 90m (E=52.5m) | spec 1.00 x warm 1.00 x fit 1.00 = 1.00 | 52.5m | 176.1m |
 | Add known_debt.md as standard protocol memory file | coding | M | Codex | 25m / 50m / 90m (E=52.5m) | spec 1.00 x warm 1.00 x fit 1.00 = 1.00 | 52.5m | 148.5m |
-| Write quickstart guide with protocol comparison table | coding | M | Gemini | 25m / 50m / 90m (E=52.5m) | spec 1.00 x warm 1.00 x fit 1.00 = 1.00 | 52.5m | 148.5m |
+| Write quickstart guide with protocol comparison table | coding | M | Claude | 25m / 50m / 90m (E=52.5m) | spec 1.00 x warm 1.00 x fit 1.00 = 1.00 | 52.5m | 148.5m |
 
 ### Wave Plan
 
 | Wave | Tasks | Duration | Agent Assignments (amortized review) |
 | --- | --- | --- | --- |
-| 0 | Implement add-agent CLI command with SPEC.md generation, Add known_debt.md as standard protocol memory file, Write quickstart guide with protocol comparison table | 75.4m | Claude: Implement add-agent CLI command with SPEC.md generation +15m review; Codex: Add known_debt.md as standard protocol memory file +15m review; Gemini: Write quickstart guide with protocol comparison table +15m review |
+| 0 | Implement add-agent CLI command with SPEC.md generation, Add known_debt.md as standard protocol memory file, Write quickstart guide with protocol comparison table | 75.4m | Claude: Implement add-agent CLI command with SPEC.md generation, Write quickstart guide with protocol comparison table +15m review; Codex: Add known_debt.md as standard protocol memory file +15m review |
 
 ### Timeline Summary
 
@@ -63,9 +63,8 @@ agent in the wave.  Per-task values below are the naive (pre-amortization) figur
 
 | Agent | Task Count | Total Work | Estimated Cost |
 | --- | --- | --- | --- |
-| Claude | 1 | 60.4m | $1.45 |
+| Claude | 2 | 120.7m | $2.90 |
 | Codex | 1 | 60.4m | $0.97 |
-| Gemini | 1 | 60.4m | $1.09 |
 
 ### Critical Path
 
@@ -85,8 +84,7 @@ No tier corrections.
 
 ### Reliability Horizon Warnings
 
-- **Add known_debt.md as standard protocol memory file**: Work estimate (60.4m) exceeds gpt_6_sol local reliability policy (unmeasured) (60m). Consider splitting the task.
-- **Write quickstart guide with protocol comparison table**: Work estimate (60.4m) exceeds gemini_3_1_pro local reliability policy (unmeasured) (45m). Consider splitting the task.
+- **Add known_debt.md as standard protocol memory file**: Work estimate (60.4m) exceeds gpt_6_1_sol local reliability policy (unmeasured) (60m). Consider splitting the task.
 
 
 ## What actually happened
@@ -103,8 +101,8 @@ These three tasks were dispatched to real agents in a production multi-agent wor
 
 **Actual compression**: 5.3x (90m wall clock / 473m work-only human equivalent). The estimate predicted 6.3x; one task (add-agent CLI) needed an extra review round that pushed it past the expected case.
 
-The local-policy warnings were useful: Codex's task landed well under the configured 60m limit (20m actual), while the warning flagged that the Gemini-assigned task was near its 45m planning limit. These values are unmeasured policy guardrails, not published METR horizons.
+The local-policy warning was useful: Codex's task landed well under the configured 60m limit (20m actual). These values are unmeasured policy guardrails, not published METR horizons.
 
 ## Key takeaway
 
-Multi-agent sessions are where `agent-estimate` delivers the most value. Three agents working in parallel produce **6.3x compression** — ~75 minutes wall clock vs ~7.9 hours of work-only human equivalent. The wave planner automatically assigns tasks to agents, schedules them in parallel, and flags reliability risks via provenance-labeled local policy. You see the heuristic cost ($3.51), parallelism benefit, and risk before committing compute.
+Multi-agent sessions are where `agent-estimate` delivers the most value. Two agents working in parallel produce **6.3x compression** — ~75 minutes wall clock vs ~7.9 hours of work-only human equivalent. The wave planner automatically assigns tasks to agents, schedules them in parallel, and flags reliability risks via provenance-labeled local policy. You see the heuristic cost ($3.87), parallelism benefit, and risk before committing compute.
