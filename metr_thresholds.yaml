@@ -1,4 +1,4 @@
-registry_version: "v0.9-policy-1"
+registry_version: "v0.9-policy-2"
 models:
   fable_5_1:
     display_name: "Fable 5.1"
@@ -21,6 +21,13 @@ models:
     source: "agent-estimate default reliability policy"
     source_version: "v0.9-policy-1"
     as_of: "2026-09-28"
+  gpt_6_1_sol:
+    display_name: "GPT-6.1 Sol"
+    p80_minutes: 60
+    basis: local-policy
+    source: "agent-estimate default reliability policy"
+    source_version: "v0.9-policy-2"
+    as_of: "2026-10-21"
   gpt_6_sol:
     display_name: "GPT-6 Sol"
     p80_minutes: 60
@@ -28,13 +35,6 @@ models:
     source: "agent-estimate default reliability policy"
     source_version: "v0.9-policy-1"
     as_of: "2026-09-28"
-  gemini_3_1_pro:
-    display_name: "Gemini 3.1 Pro"
-    p80_minutes: 45
-    basis: local-policy
-    source: "agent-estimate default reliability policy"
-    source_version: "v0.7.5-policy-1"
-    as_of: "2026-08-23"
   sonnet_5_5:
     display_name: "Sonnet 5.5"
     p80_minutes: 30
@@ -123,13 +123,6 @@ models:
   gpt_5_2:
     display_name: "GPT-5.2"
     p80_minutes: 55
-    basis: local-policy
-    source: "agent-estimate default reliability policy"
-    source_version: "v0.7.5-policy-1"
-    as_of: "2026-08-23"
-  gemini_3_pro:
-    display_name: "Gemini 3 Pro"
-    p80_minutes: 45
     basis: local-policy
     source: "agent-estimate default reliability policy"
     source_version: "v0.7.5-policy-1"

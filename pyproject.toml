@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agent-estimate"
-version = "0.9.0"
+version = "0.10.0"
 description = "Know what an AI task will cost before you run it"
 readme = "README.md"
 license = "Apache-2.0"

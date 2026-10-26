@@ -34,8 +34,7 @@ MULTI_AGENT_TASKS = [
 HEADLINE_LINES = [
     "| Expected case | 75.4m |",
     "| Compression ratio | 6.28x |",
-    "Work estimate (60.4m) exceeds gpt_6_sol local reliability policy (unmeasured) (60m)",
-    "Work estimate (60.4m) exceeds gemini_3_1_pro local reliability policy (unmeasured) (45m)",
+    "Work estimate (60.4m) exceeds gpt_6_1_sol local reliability policy (unmeasured) (60m)",
 ]
 
 runner = CliRunner()
@@ -93,7 +92,7 @@ EXAMPLE_CASES = [
     ExampleCase(
         path="examples/multi-agent.md",
         args=("estimate", "--file", "{task_file}"),
-        index_label="3-agent parallel session (3 features)",
+        index_label="2-agent parallel session (3 features)",
         index_type="Multi-agent",
         index_tier="M×3",
         tasks=tuple(MULTI_AGENT_TASKS),

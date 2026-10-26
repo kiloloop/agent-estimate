@@ -247,8 +247,7 @@ class TestMetrThresholds:
             ("claude", "opus_5_5", 90.0),
             ("opus_4_6", "opus_4_6", 90.0),
             ("codex", "gpt_6_astra", 90.0),
-            ("production", "gpt_6_sol", 60.0),
-            ("gemini", "gemini_3_1_pro", 45.0),
+            ("production", "gpt_6_1_sol", 60.0),
             ("gpt-5.3", "gpt_5_3", 60.0),
         ],
     )
@@ -259,8 +258,7 @@ class TestMetrThresholds:
             "opus_5_5": 90.0,
             "opus_4_6": 90.0,
             "gpt_6_astra": 90.0,
-            "gpt_6_sol": 60.0,
-            "gemini_3_1_pro": 45.0,
+            "gpt_6_1_sol": 60.0,
             "gpt_5_3": 60.0,
         }
         result = check_metr_threshold(
@@ -279,6 +277,7 @@ class TestMetrThresholds:
             ("claude-haiku-4-5", "haiku_4_5", 15.0),
             ("claude-haiku-4-5-20251001", "haiku_4_5", 15.0),
             ("gpt-6-astra", "gpt_6_astra", 90.0),
+            ("gpt-6.1-sol", "gpt_6_1_sol", 60.0),
             ("gpt-6-sol", "gpt_6_sol", 60.0),
             ("gpt-6-luna", "gpt_6_luna", 15.0),
         ],
@@ -302,7 +301,6 @@ class TestMetrThresholds:
             "opus_4_6": 90.0,
             "gpt_6_astra": 90.0,
             "gpt_6_sol": 60.0,
-            "gemini_3_1_pro": 45.0,
         }
         claude_result = check_metr_threshold(
             "frontier",
@@ -310,13 +308,6 @@ class TestMetrThresholds:
             thresholds=thresholds,
             fallback_threshold=45.0,
             agent_name="Claude",
-        )
-        gemini_result = check_metr_threshold(
-            "frontier",
-            70.0,
-            thresholds=thresholds,
-            fallback_threshold=45.0,
-            agent_name="Gemini",
         )
         codex_result = check_metr_threshold(
             "frontier",
@@ -329,9 +320,21 @@ class TestMetrThresholds:
         assert codex_result is not None
         assert codex_result.model_key == "gpt_6_astra"
         assert codex_result.threshold_minutes == pytest.approx(90.0)
-        assert gemini_result is not None
-        assert gemini_result.model_key == "gemini_3_1_pro"
-        assert gemini_result.threshold_minutes == pytest.approx(45.0)
+
+    @pytest.mark.parametrize(
+        "model_key", ["gemini", "gemini_pro", "gemini-3.1-pro", "gemini_3_pro"]
+    )
+    def test_retired_gemini_keys_use_the_fallback_limit(self, model_key: str) -> None:
+        result = check_metr_threshold(model_key, 50.0, fallback_threshold=40.0)
+        assert result is not None
+        assert result.threshold_minutes == pytest.approx(40.0)
+
+    def test_frontier_tier_for_a_gemini_agent_uses_the_fallback_limit(self) -> None:
+        result = check_metr_threshold(
+            "frontier", 50.0, fallback_threshold=40.0, agent_name="Gemini"
+        )
+        assert result is not None
+        assert result.threshold_minutes == pytest.approx(40.0)
 
     def test_unknown_model_logs_warning_when_falling_back(self, caplog: pytest.LogCaptureFixture) -> None:
         thresholds = {"opus": 90.0}

@@ -8,7 +8,7 @@ Real input/output examples from production agent dispatches. Every command below
 | Implement CLI command with code generation | Coding | M | 2.34x | [coding-m.md](./coding-m.md) |
 | Audit cloud infrastructure providers | Research | S | 1.49x | [research.md](./research.md) |
 | Write quickstart guide + README | Documentation | S | 2.45x | [documentation.md](./documentation.md) |
-| 3-agent parallel session (3 features) | Multi-agent | M×3 | 6.28x | [multi-agent.md](./multi-agent.md) |
+| 2-agent parallel session (3 features) | Multi-agent | M×3 | 6.28x | [multi-agent.md](./multi-agent.md) |
 
 ## How to read the output
 
@@ -22,7 +22,7 @@ Real input/output examples from production agent dispatches. Every command below
 
 ## Calibration data
 
-These examples are drawn from a production multi-agent fleet (Claude, Codex, Gemini) running real development tasks. The shipped priors are informed by internal dispatches, but the estimate pipeline does not yet apply the local calibration store:
+These examples are drawn from a production multi-agent fleet (Claude, Codex) running real development tasks. The shipped priors are informed by internal dispatches, but the estimate pipeline does not yet apply the local calibration store:
 
 | Metric | Value |
 |--------|-------|

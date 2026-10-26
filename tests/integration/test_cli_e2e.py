@@ -743,7 +743,7 @@ class TestEstimateHistoryFile:
         history = tmp_path / "history.json"
         history.write_text(
             json.dumps({"dispatches": [
-                {"agent": "gemini", "project": "proj", "completed_at": recent},
+                {"agent": "claude", "project": "proj", "completed_at": recent},
                 {"agent": "codex", "project": "proj", "completed_at": stale},
             ]})
         )

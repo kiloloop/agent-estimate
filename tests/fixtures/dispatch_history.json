@@ -19,7 +19,7 @@
       "task": "Fix CI pipeline"
     },
     {
-      "agent": "gemini",
+      "agent": "claude",
       "project": "agent-estimate",
       "completed_at": "2026-02-17T10:00:00Z",
       "task": "Add documentation"

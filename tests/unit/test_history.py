@@ -102,7 +102,7 @@ def test_no_matching_agent_returns_10(tmp_path: Path, ref_time: datetime) -> Non
         }
     ]
     path = _write_history(tmp_path, dispatches)
-    result = infer_warm_context(path, agent="gemini", reference_time=ref_time)
+    result = infer_warm_context(path, agent="claude", reference_time=ref_time)
     assert result.value == 1.0
     assert result.source == "default"
 
@@ -294,7 +294,7 @@ def test_mixed_agent_history_requires_filter(
     """Without agent filter, picks most recent across all agents; with filter, scoped."""
     dispatches = [
         {
-            "agent": "gemini",
+            "agent": "claude",
             "project": "agent-estimate",
             "completed_at": (ref_time - timedelta(minutes=5)).isoformat(),
         },
@@ -306,7 +306,7 @@ def test_mixed_agent_history_requires_filter(
     ]
     path = _write_history(tmp_path, dispatches)
 
-    # Without filter: picks gemini's 5m-ago dispatch -> 0.3
+    # Without filter: picks claude's 5m-ago dispatch -> 0.3
     result_unfiltered = infer_warm_context(path, reference_time=ref_time)
     assert result_unfiltered.value == 0.3
 
